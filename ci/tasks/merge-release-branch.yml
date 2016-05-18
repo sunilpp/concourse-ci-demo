@@ -14,7 +14,6 @@ run:
   args:
   - -c
   - |
-    env
     cd out
     shopt -s dotglob
     mv -f ../repo/* ./
