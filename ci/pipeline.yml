@@ -159,10 +159,11 @@ jobs:
           resource: repo-master
           passed: [ merge-release-to-master ]
           trigger: true
+        - get: repo-release
         - get: version
         - get: m2
-      - task: update-pom
-        file: repo/ci/tasks/update-pom.yml
+      - task: bump-to-release-version
+        file: repo-release/ci/tasks/bump-to-release-version.yml
         params:
           GIT_EMAIL: {{git-email}}
           GIT_NAME: {{git-name}}
@@ -183,10 +184,9 @@ jobs:
         - get: version
           params: {bump: minor}
         - get: m2
-      - task: update-pom
-        file: repo/ci/tasks/update-pom.yml
+      - task: bump-to-next-develop-version
+        file: repo/ci/tasks/bump-to-next-develop-version.yml
         params:
-          SNAPSHOT: true
           GIT_EMAIL: {{git-email}}
           GIT_NAME: {{git-name}}
       - put: repo
