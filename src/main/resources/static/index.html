@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/2.26.3/css/uikit.gradient.min.css"/>
+</head>
+
+<body>
+
+<div class="uk-grid">
+    <div class="uk-width-1-5"></div>
+    <div class="uk-width-3-5">
+        <h1>Demo</h1>
+        <table class="uk-table uk-table-striped">
+            <tr>
+                <th>Version</th>
+                <td id="version"></td>
+            </tr>
+            <tr>
+                <th>Commit Id</th>
+                <td id="commit-id"></td>
+            </tr>
+            <tr>
+                <th>Commit Time</th>
+                <td id="commit-time"></td>
+            </tr>
+            <tr>
+                <th>CF Space</th>
+                <td id="cf-space"></td>
+            </tr>
+        </table>
+    </div>
+    <div class="uk-width-1-5"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            $.getJSON('/info', function (res) {
+                $('#version').text(res.build.version);
+                $('#commit-id').text(res.git.commit.id);
+                $('#commit-time').text(res.git.commit.time);
+            });
+            $.getJSON('/env', function (res) {
+                if (res.vcap) {
+                    $('#cf-space').text(res.vcap['vcap.application.space_name']);
+                }
+            });
+        }, false);
+    </script>
+</div>
+</body>
+</html>
