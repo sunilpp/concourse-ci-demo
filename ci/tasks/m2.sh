@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 if [ "$1" == "init" ]; then
 	mkdir -p ../m2/rootfs/opt/m2

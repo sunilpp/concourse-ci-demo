@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 VERSION=`cat version/number`
 MESSAGE="Release $VERSION"
