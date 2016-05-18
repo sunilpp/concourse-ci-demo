@@ -163,6 +163,9 @@ jobs:
         - get: m2
       - task: update-pom
         file: repo/ci/tasks/update-pom.yml
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
       - put: repo
         resource: repo-master
         params:
@@ -184,6 +187,8 @@ jobs:
         file: repo/ci/tasks/update-pom.yml
         params:
           SNAPSHOT: true
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
       - put: repo
         resource: repo-release
         params:
