@@ -11,6 +11,12 @@ resources:
       uri: git@github.com:making/concourse-ci-demo.git
       branch: develop
       private_key: {{github-private-key}}
+  - name: repo-release
+    type: git
+    source:
+      uri: git@github.com:making/concourse-ci-demo.git
+      branch: release
+      private_key: {{github-private-key}}
   - name: repo-master
     type: git
     source:
@@ -34,6 +40,15 @@ resources:
       password: {{cf-password}}
       organization: {{cf-org}}
       space: production
+      skip_cert_check: true
+  - name: cf-staging
+    type: cf
+    source:
+      api: https://api.run.pivotal.io
+      username: {{cf-username}}
+      password: {{cf-password}}
+      organization: {{cf-org}}
+      space: staging
       skip_cert_check: true
   - name: cf-dev
     type: cf
@@ -68,69 +83,7 @@ jobs:
         params:
           repos:
           - repo
-  - name: test-master
-    serial: true
-    public: true
-    plan:
-      - aggregate:
-        - get: repo
-          resource: repo-master
-          trigger: true
-        - get: m2
-      - task: unit
-        file: repo/ci/tasks/unit.yml
 
-  - name: tag-master
-    plan:
-      - aggregate:
-        - get:  repo
-          resource: repo-master
-          passed: [ test-master ]
-        - get: version
-        - get: m2
-      - task: update-pom
-        file: repo/ci/tasks/update-pom.yml
-      - put: repo
-        resource: repo-master
-        params:
-          repository: out
-          tag: version/number
-
-  - name: bump-version
-    plan:
-      - aggregate:
-        - get:  repo
-          resource: repo-master
-          passed: [ tag-master ]
-          trigger: true
-        - get: version
-          params: {bump: minor}
-        - get: m2
-      - task: update-pom
-        file: repo/ci/tasks/update-pom.yml
-        params:
-          SNAPSHOT: true
-      - put: repo
-        resource: repo-master
-        params:
-          repository: out
-      - put: version
-        params: {file: version/number}
-
-  - name: merge-master-to-develop
-    plan:
-      - aggregate:
-        - get: repo
-          resource: repo-develop
-        - get: repo-master
-          passed: [ bump-version ]
-          trigger: true
-      - task: merge-master-to-develop
-        file: repo/ci/tasks/merge-master-to-develop.yml
-      - put: repo
-        resource: repo-develop
-        params:
-          repository: out
   - name: deploy-develop
     serial: true
     public: true
@@ -148,6 +101,105 @@ jobs:
           manifest: repo/manifest-dev.yml
           path: output/demo.jar
           current_app_name: concourse-ci-demo-dev
+
+  - name: test-release
+    serial: true
+    public: true
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-release
+          trigger: true
+        - get: m2
+      - task: unit
+        file: repo/ci/tasks/unit.yml
+
+  - name: deploy-staging
+    serial: true
+    public: true
+    plan:
+      - aggregate:
+        - get: m2
+        - get:  repo
+          resource: repo-release
+          passed: [ test-release ]
+          trigger: true
+      - task: build
+        file: repo/ci/tasks/build.yml
+      - put: cf-staging
+        params:
+          manifest: repo/manifest-staging.yml
+          path: output/demo.jar
+          current_app_name: concourse-ci-demo-staging
+
+  - name: merge-release-to-master
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-master
+        - get: repo-release
+          passed: [ test-release ]
+      - task: merge-release-to-master
+        file: repo/ci/tasks/merge-release-branch.yml
+      - put: repo
+        resource: repo-master
+        params:
+          repository: out
+
+  - name: tag-master
+    plan:
+      - aggregate:
+        - get:  repo
+          resource: repo-master
+          passed: [ merge-release-to-master ]
+          trigger: true
+        - get: version
+        - get: m2
+      - task: update-pom
+        file: repo/ci/tasks/update-pom.yml
+      - put: repo
+        resource: repo-master
+        params:
+          repository: out
+          tag: version/number
+
+  - name: bump-version
+    plan:
+      - aggregate:
+        - get:  repo-master
+          passed: [ tag-master ]
+          trigger: true
+        - get:  repo
+          resource: repo-release
+        - get: version
+          params: {bump: minor}
+        - get: m2
+      - task: update-pom
+        file: repo/ci/tasks/update-pom.yml
+        params:
+          SNAPSHOT: true
+      - put: repo
+        resource: repo-release
+        params:
+          repository: out
+      - put: version
+        params: {file: version/number}
+
+  - name: merge-release-to-develop
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-develop
+        - get: repo-release
+          passed: [ bump-version ]
+          trigger: true
+      - task: merge-release-to-develop
+        file: repo/ci/tasks/merge-release-branch.yml
+      - put: repo
+        resource: repo-develop
+        params:
+          repository: out
+
   - name: deploy-prod
     serial: true
     public: true
@@ -169,7 +221,7 @@ jobs:
 #  - name: init-m2
 #    plan:
 #      - get: repo
-#        resource: repo-master
+#        resource: repo-release
 #      - task: build-m2
 #        config:
 #          platform: linux
@@ -194,7 +246,7 @@ jobs:
 #  - name: update-m2
 #    plan:
 #      - get: repo
-#        resource: repo-master
+#        resource: repo-release
 #      - get: m2
 #      - task: build-m2
 #        config:

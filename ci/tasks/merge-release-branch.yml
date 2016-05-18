@@ -6,7 +6,7 @@ image_resource:
     repository: getourneau/alpine-bash-git
 inputs:
   - name: repo
-  - name: repo-master
+  - name: repo-release
 outputs:
   - name: out
 run:
@@ -19,5 +19,5 @@ run:
     cd out
     shopt -s dotglob
     mv -f ../repo/* ./
-    git remote add -f upstream ../repo-master
-    git merge --no-edit upstream/master
+    git remote add -f release ../repo-release
+    git merge --no-edit release/release
