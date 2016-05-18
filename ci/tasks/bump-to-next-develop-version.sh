@@ -1,20 +1,13 @@
 #!/bin/sh
 
-VERSION=`cat version/number`
-MESSAGE="Release $VERSION"
-
-if [ "$SNAPSHOT" == "true" ]; then
-    VERSION=${VERSION}-SNAPSHOT
-    MESSAGE="Bump to Next Development Version ($VERSION)"
-fi
+VERSION=`cat version/number`-SNAPSHOT
+MESSAGE="Bump to Next Development Version ($VERSION)"
 
 cd out
 shopt -s dotglob
 mv -f ../repo/* ./
-if [ "$SNAPSHOT" == "true" ]; then
-    echo "Rebase ..."
-    git rebase master
-fi
+git remote add -f master ../repo-master
+git merge --no-edit master/master
 echo "Bump to ($VERSION)"
 ./mvnw versions:set -DnewVersion=${VERSION} -DallowSnapshots -Dmaven.repo.local=../m2/rootfs/opt/m2
 git config --global user.email "${GIT_EMAIL}"

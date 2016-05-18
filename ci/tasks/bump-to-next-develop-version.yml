@@ -8,10 +8,11 @@ image_resource:
 inputs:
   - name: version
   - name: repo
+  - name: repo-master
   - name: m2
 outputs:
   - name: out
 run:
   path: /bin/bash
   args:
-    - repo/ci/tasks/update-pom.sh
+    - repo/ci/tasks/bump-to-next-develop-version.sh
