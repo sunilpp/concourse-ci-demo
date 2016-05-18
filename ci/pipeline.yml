@@ -89,34 +89,7 @@ jobs:
         - get: version
         - get: m2
       - task: update-pom
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source:
-              repository: java
-              tag: 8-jdk
-          inputs:
-            - name: version
-            - name: repo
-            - name: m2
-          outputs:
-            - name: out
-          run:
-            path: /bin/bash
-            args:
-              - -c
-              - |
-                VERSION=`cat version/number`
-                cd out
-                shopt -s dotglob
-                mv -f ../repo/* ./
-                echo "Releasing $VERSION"
-                ./mvnw versions:set -DnewVersion=$VERSION -Dmaven.repo.local=../m2/rootfs/opt/m2
-                git config --global user.email "{{git-email}}"
-                git config --global user.name "{{git-name}}"
-                git add pom.xml
-                git commit -m "Release $VERSION"
+        file: repo/ci/tasks/update-pom.yml
       - put: repo
         resource: repo-master
         params:
@@ -134,34 +107,9 @@ jobs:
           params: {bump: minor}
         - get: m2
       - task: update-pom
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source:
-              repository: java
-              tag: 8-jdk
-          inputs:
-            - name: version
-            - name: repo
-            - name: m2
-          outputs:
-            - name: out
-          run:
-            path: /bin/bash
-            args:
-              - -c
-              - |
-                VERSION=`cat version/number`-SNAPSHOT
-                cd out
-                shopt -s dotglob
-                mv -f ../repo/* ./
-                echo "Bump to Next Development Version ($VERSION)"
-                ./mvnw versions:set -DnewVersion=${VERSION} -DallowSnapshots -Dmaven.repo.local=../m2/rootfs/opt/m2
-                git config --global user.email "{{git-email}}"
-                git config --global user.name "{{git-name}}"
-                git add pom.xml
-                git commit -m "Bump to Next Development Version ($VERSION)"
+        file: repo/ci/tasks/update-pom.yml
+        params:
+          SNAPSHOT: true
       - put: repo
         resource: repo-master
         params:
