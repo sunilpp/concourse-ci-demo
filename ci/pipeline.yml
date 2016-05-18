@@ -141,6 +141,9 @@ jobs:
           passed: [ test-release ]
       - task: merge-release-to-master
         file: repo-release/ci/tasks/merge-release-branch.yml
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
       - put: repo
         resource: repo-master
         params:
@@ -195,6 +198,9 @@ jobs:
           trigger: true
       - task: merge-release-to-develop
         file: repo-release/ci/tasks/merge-release-branch.yml
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
       - put: repo
         resource: repo-develop
         params:
