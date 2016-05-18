@@ -140,7 +140,7 @@ jobs:
         - get: repo-release
           passed: [ test-release ]
       - task: merge-release-to-master
-        file: repo/ci/tasks/merge-release-branch.yml
+        file: repo-release/ci/tasks/merge-release-branch.yml
       - put: repo
         resource: repo-master
         params:
@@ -194,7 +194,7 @@ jobs:
           passed: [ bump-version ]
           trigger: true
       - task: merge-release-to-develop
-        file: repo/ci/tasks/merge-release-branch.yml
+        file: repo-release/ci/tasks/merge-release-branch.yml
       - put: repo
         resource: repo-develop
         params:
