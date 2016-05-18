@@ -16,6 +16,14 @@ resources:
       uri: git@github.com:making/concourse-ci-demo.git
       branch: master
       private_key: {{github-private-key}}
+  - name: version
+    type: semver
+    source:
+      uri: git@github.com:making/concourse-ci-demo.git
+      branch: version
+      private_key: {{github-private-key}}
+      file: version
+      initial_version: 1.0.0-SNAPSHOT
   - name: cf-prod
     type: cf
     source:
@@ -38,9 +46,6 @@ resources:
     type: docker-image
     source:
       repository: making/m2
-#      username: {{docker-username}}
-#      password: {{docker-password}}
-#      email: {{docker-email}}
 
 jobs:
   - name: test-develop
@@ -73,7 +78,26 @@ jobs:
       - get:  repo
         resource: repo-master
         passed: [ test-master ]
-
+      - get: version
+        params: {bump: minor}
+      - task: show-version
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: getourneau/alpine-bash-git
+          inputs:
+            - name: version
+          run:
+            path: sh
+            args:
+              - -c
+              - |
+                ls -la
+                cat version/number
+                env
+                exit 99
   - name: merge-master-to-develop
     plan:
       - get: repo
