@@ -11,6 +11,10 @@ fi
 cd out
 shopt -s dotglob
 mv -f ../repo/* ./
+if [ "$SNAPSHOT" == "true" ]; then
+    echo "Rebase ..."
+    git rebase master
+fi
 echo "Bump to ($VERSION)"
 ./mvnw versions:set -DnewVersion=${VERSION} -DallowSnapshots -Dmaven.repo.local=../m2/rootfs/opt/m2
 git config --global user.email "${GIT_EMAIL}"
