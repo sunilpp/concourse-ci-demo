@@ -18,3 +18,5 @@ run:
       cd repo
       ./mvnw package -Dmaven.test.skip=true -Dmaven.repo.local=../m2/rootfs/opt/m2
       mv target/*.jar ../output/demo.jar
+params:
+  _JAVA_OPTIONS: -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Djava.security.egd=file:/dev/./urandom
