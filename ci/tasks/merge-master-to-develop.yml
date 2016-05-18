@@ -14,8 +14,8 @@ run:
   args:
   - -c
   - |
-    git config --global user.email "makingx@gmail.com"
-    git config --global user.name "Toshiaki Maki"
+    git config --global user.email "{{git-email}}"
+    git config --global user.name "{{git-name}}"
     cd out
     shopt -s dotglob
     mv -f ../repo/* ./
