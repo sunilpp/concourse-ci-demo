@@ -11,7 +11,4 @@ inputs:
 run:
   path: sh
   args:
-    - -c
-    - |
-      cd repo
-      ./mvnw test -Dmaven.repo.local=../m2/rootfs/opt/m2
+    - repo/ci/tasks/unit.sh

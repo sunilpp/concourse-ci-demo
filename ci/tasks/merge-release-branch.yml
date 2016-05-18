@@ -12,12 +12,4 @@ outputs:
 run:
   path: /bin/bash
   args:
-  - -c
-  - |
-    cd out
-    shopt -s dotglob
-    mv -f ../repo/* ./
-    git config --global user.email "${GIT_EMAIL}"
-    git config --global user.name "${GIT_NAME}"
-    git remote add -f release ../repo-release
-    git merge --no-edit release/release
+  - repo-release/ci/tasks/merge-release-branch.sh

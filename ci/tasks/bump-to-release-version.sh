@@ -6,7 +6,7 @@ MESSAGE="Release $VERSION"
 cd out
 shopt -s dotglob
 mv -f ../repo/* ./
-echo "Bump to ($VERSION)"
+echo "[Concourse CI] Bump to ($VERSION)"
 ./mvnw versions:set -DnewVersion=${VERSION} -Dmaven.repo.local=../m2/rootfs/opt/m2
 git config --global user.email "${GIT_EMAIL}"
 git config --global user.name "${GIT_NAME}"
