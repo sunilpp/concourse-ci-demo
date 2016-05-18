@@ -1,0 +1,24 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: getourneau/alpine-bash-git
+inputs:
+  - name: repo
+  - name: repo-master
+outputs:
+  - name: out
+run:
+  path: /bin/bash
+  args:
+  - -c
+  - |
+    git config --global user.email "makingx@gmail.com"
+    git config --global user.name "Toshiaki Maki"
+    cd out
+    shopt -s dotglob
+    mv -f ../repo/* ./
+    git remote add -f upstream ../repo-master
+    git merge --no-edit upstream/master
+    git status
