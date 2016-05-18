@@ -14,8 +14,12 @@
         <h1>Demo</h1>
         <table class="uk-table uk-table-striped">
             <tr>
-                <th>Version</th>
-                <td id="version"></td>
+                <th>Build Version</th>
+                <td id="build-version"></td>
+            </tr>
+            <tr>
+                <th>Build Time</th>
+                <td id="build-time"></td>
             </tr>
             <tr>
                 <th>Commit Id</th>
@@ -36,7 +40,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             $.getJSON('/info', function (res) {
-                $('#version').text(res.build.version);
+                $('#build-version').text(res.build.version);
+                $('#build-time').text(res.build.time);
                 $('#commit-id').text(res.git.commit.id);
                 $('#commit-time').text(res.git.commit.time);
             });
