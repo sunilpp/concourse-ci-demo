@@ -1,0 +1,5 @@
+target
+credentials.yml
+*.jar
+.idea
+*.iml
