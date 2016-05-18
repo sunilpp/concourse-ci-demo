@@ -8,8 +8,9 @@ resources:
   - name: repo-develop
     type: git
     source:
-      uri: https://github.com/making/concourse-ci-demo
+      uri: git@github.com:making/concourse-ci-demo.git
       branch: develop
+      private_key: {{github-private-key}}
   - name: repo-master
     type: git
     source:
@@ -23,7 +24,8 @@ resources:
       branch: version
       private_key: {{github-private-key}}
       file: version
-      initial_version: 1.0.0-SNAPSHOT
+      driver: git
+      initial_version: 0.5.0
   - name: cf-prod
     type: cf
     source:
@@ -46,16 +48,20 @@ resources:
     type: docker-image
     source:
       repository: making/m2
+#      username: {-{docker-username}}
+#      password: {-{docker-password}}
+#      email: {-{docker-email}}
 
 jobs:
   - name: test-develop
     serial: true
     public: true
     plan:
-      - get: repo
-        resource: repo-develop
-        trigger: true
-      - get: m2
+      - aggregate:
+        - get: repo
+          resource: repo-develop
+          trigger: true
+        - get: m2
       - task: unit
         file: repo/ci/tasks/unit.yml
       - put: tracker
@@ -66,45 +72,111 @@ jobs:
     serial: true
     public: true
     plan:
-      - get: repo
-        resource: repo-master
-        trigger: true
-      - get: m2
+      - aggregate:
+        - get: repo
+          resource: repo-master
+          trigger: true
+        - get: m2
       - task: unit
         file: repo/ci/tasks/unit.yml
 
   - name: tag-master
     plan:
-      - get:  repo
-        resource: repo-master
-        passed: [ test-master ]
-      - get: version
-        params: {bump: minor}
-      - task: show-version
+      - aggregate:
+        - get:  repo
+          resource: repo-master
+          passed: [ test-master ]
+        - get: version
+        - get: m2
+      - task: update-pom
         config:
           platform: linux
           image_resource:
             type: docker-image
             source:
-              repository: getourneau/alpine-bash-git
+              repository: java
+              tag: 8-jdk
           inputs:
             - name: version
+            - name: repo
+            - name: m2
+          outputs:
+            - name: out
           run:
-            path: sh
+            path: /bin/bash
             args:
               - -c
               - |
-                ls -la
-                cat version/number
-                env
-                exit 99
+                VERSION=`cat version/number`
+                cd out
+                shopt -s dotglob
+                mv -f ../repo/* ./
+                echo "Releasing $VERSION"
+                ./mvnw versions:set -DnewVersion=$VERSION -Dmaven.repo.local=../m2/rootfs/opt/m2
+                git config --global user.email "{{git-email}}"
+                git config --global user.name "{{git-name}}"
+                git add pom.xml
+                git commit -m "Release $VERSION"
+      - put: repo
+        resource: repo-master
+        params:
+          repository: out
+          tag: version/number
+
+  - name: bump-version
+    plan:
+      - aggregate:
+        - get:  repo
+          resource: repo-master
+          passed: [ tag-master ]
+          trigger: true
+        - get: version
+          params: {bump: minor}
+        - get: m2
+      - task: update-pom
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: java
+              tag: 8-jdk
+          inputs:
+            - name: version
+            - name: repo
+            - name: m2
+          outputs:
+            - name: out
+          run:
+            path: /bin/bash
+            args:
+              - -c
+              - |
+                VERSION=`cat version/number`-SNAPSHOT
+                cd out
+                shopt -s dotglob
+                mv -f ../repo/* ./
+                echo "Bump to Next Development Version ($VERSION)"
+                ./mvnw versions:set -DnewVersion=${VERSION} -DallowSnapshots -Dmaven.repo.local=../m2/rootfs/opt/m2
+                git config --global user.email "{{git-email}}"
+                git config --global user.name "{{git-name}}"
+                git add pom.xml
+                git commit -m "Bump to Next Development Version ($VERSION)"
+      - put: repo
+        resource: repo-master
+        params:
+          repository: out
+      - put: version
+        params: {file: version/number}
+
   - name: merge-master-to-develop
     plan:
-      - get: repo
-        resource: repo-develop
-      - get: repo-master
-        passed: [ tag-master ]
-        trigger: true
+      - aggregate:
+        - get: repo
+          resource: repo-develop
+        - get: repo-master
+          passed: [ bump-version ]
+          trigger: true
       - task: merge-master-to-develop
         file: repo/ci/tasks/merge-master-to-develop.yml
       - put: repo
@@ -115,11 +187,12 @@ jobs:
     serial: true
     public: true
     plan:
-      - get: m2
-      - get:  repo
-        resource: repo-develop
-        passed: [ test-develop ]
-        trigger: true
+      - aggregate:
+        - get: m2
+        - get:  repo
+          resource: repo-develop
+          passed: [ test-develop ]
+          trigger: true
       - task: build
         file: repo/ci/tasks/build.yml
       - put: cf-dev
@@ -131,11 +204,12 @@ jobs:
     serial: true
     public: true
     plan:
-      - get: m2
-      - get:  repo
-        resource: repo-master
-        passed: [ tag-master ]
-        trigger: true
+      - aggregate:
+        - get: m2
+        - get:  repo
+          resource: repo-master
+          passed: [ tag-master ]
+          trigger: true
       - task: build
         file: repo/ci/tasks/build.yml
       - put: cf-prod
@@ -147,6 +221,7 @@ jobs:
 #  - name: init-m2
 #    plan:
 #      - get: repo
+#        resource: repo-master
 #      - task: build-m2
 #        config:
 #          platform: linux
@@ -171,6 +246,7 @@ jobs:
 #  - name: update-m2
 #    plan:
 #      - get: repo
+#        resource: repo-master
 #      - get: m2
 #      - task: build-m2
 #        config:

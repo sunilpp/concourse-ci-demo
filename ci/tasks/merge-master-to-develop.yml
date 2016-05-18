@@ -21,4 +21,3 @@ run:
     mv -f ../repo/* ./
     git remote add -f upstream ../repo-master
     git merge --no-edit upstream/master
-    git status
