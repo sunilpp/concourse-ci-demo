@@ -41,7 +41,8 @@
         </table>
 
         <p>
-            <a href="https://github.com/making/concourse-ci-demo"><i class="uk-icon-github"></i> making/concourse-ci-demo</a>
+            <a href="https://github.com/making/concourse-ci-demo"><i class="uk-icon-github"></i>
+                making/concourse-ci-demo</a>
         </p>
     </div>
     <div class="uk-width-1-5"></div>
@@ -51,7 +52,7 @@
             $.getJSON('/info', function (res) {
                 $('#build-version').text(res.build.version);
                 $('#build-time').text(res.build.time);
-                $('#commit-id').text(res.git.commit.id);
+                $('#commit-id').html('<a href="https://github.com/making/concourse-ci-demo/tree/' + res.git.branch + '">' + res.git.commit.id + '</a>');
                 $('#commit-time').text(res.git.commit.time);
             });
             $.getJSON('/env', function (res) {
