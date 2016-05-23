@@ -8,8 +8,8 @@ This pipeline enables following development flow:
 
 ![image](https://qiita-image-store.s3.amazonaws.com/0/1852/a560e677-2ee9-398b-4548-b64d93b87a75.png)
 
-
-
 * Production Space ... http://concourse-ci-demo.cfapps.io/
 * Staging Space ... http://concourse-ci-demo-staging.cfapps.io/
 * Development Space ... http://concourse-ci-demo-dev.cfapps.io/
+
+http://www.slideshare.net/makingx/concourse-ci-meetup-demo
