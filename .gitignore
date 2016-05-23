@@ -1,4 +1,5 @@
 target
 credentials.yml
+*-local.*
 .idea
 *.iml
