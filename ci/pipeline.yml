@@ -8,28 +8,28 @@ resources:
   - name: repo-develop
     type: git
     source:
-      uri: git@github.com:making/concourse-ci-demo.git
+      uri: git@github.com:sunilpp/concourse-ci-demo.git
       branch: develop
       private_key: {{github-private-key}}
     check_every: 10s # for demo
   - name: repo-release
     type: git
     source:
-      uri: git@github.com:making/concourse-ci-demo.git
+      uri: git@github.com:sunilpp/concourse-ci-demo.git
       branch: release
       private_key: {{github-private-key}}
     check_every: 10s # for demo
   - name: repo-master
     type: git
     source:
-      uri: git@github.com:making/concourse-ci-demo.git
+      uri: git@github.com:sunilpp/concourse-ci-demo.git
       branch: master
       private_key: {{github-private-key}}
     check_every: 10s # for demo
   - name: version
     type: semver
     source:
-      uri: git@github.com:making/concourse-ci-demo.git
+      uri: git@github.com:sunilpp/concourse-ci-demo.git
       branch: version
       private_key: {{github-private-key}}
       file: version
@@ -66,9 +66,9 @@ resources:
     type: docker-image
     source:
       repository: making/m2
-#      username: {-{docker-username}}
-#      password: {-{docker-password}}
-#      email: {-{docker-email}}
+      # username: {-{docker-username}}
+      # password: {-{docker-password}}
+      # email: {-{docker-email}}
 
 jobs:
   - name: test-develop
@@ -153,13 +153,27 @@ jobs:
         params:
           repository: out
 
+  - name: test-master
+    serial: true
+    public: true
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-master
+          # comment out bellow to support hotfix
+          passed: [ merge-release-to-master ]
+          trigger: true
+        - get: m2
+      - task: unit
+        file: repo/ci/tasks/unit.yml
+
   - name: tag-master
     public: true
     plan:
       - aggregate:
         - get:  repo
           resource: repo-master
-          passed: [ merge-release-to-master ]
+          passed: [ test-master ]
           trigger: true
         - get: repo-release
         - get: version
@@ -236,53 +250,54 @@ jobs:
           path: output/demo.jar
           current_app_name: concourse-ci-demo
 
-#  - name: init-m2
-#    plan:
-#      - get: repo
-#        resource: repo-release
-#      - task: build-m2
-#        config:
-#          platform: linux
-#          image_resource:
-#            type: docker-image
-#            source:
-#              repository: java
-#              tag: 8-jdk-alpine
-#          inputs:
-#            - name: repo
-#          outputs:
-#            - name: to-push
-#          run:
-#            path: sh
-#            args:
-#            - repo/ci/tasks/m2.sh
-#            - init
-#      - put: m2
-#        params:
-#          import_file: to-push/rootfs.tar
-#
-#  - name: update-m2
-#    plan:
-#      - get: repo
-#        resource: repo-release
-#      - get: m2
-#      - task: build-m2
-#        config:
-#          platform: linux
-#          image_resource:
-#            type: docker-image
-#            source:
-#              repository: java
-#              tag: 8-jdk-alpine
-#          inputs:
-#            - name: repo
-#            - name: m2
-#          outputs:
-#            - name: to-push
-#          run:
-#            path: sh
-#            args:
-#            - repo/ci/tasks/m2.sh
-#      - put: m2
-#        params:
-#          import_file: to-push/rootfs.tar
+  # - name: init-m2
+  #   plan:
+  #     - get: repo
+  #       resource: repo-release
+  #     - task: build-m2
+  #       config:
+  #         platform: linux
+  #         image_resource:
+  #           type: docker-image
+  #           source:
+  #             repository: java
+  #             tag: 8-jdk-alpine
+  #         inputs:
+  #           - name: repo
+  #         outputs:
+  #           - name: to-push
+  #         run:
+  #           path: sh
+  #           args:
+  #           - repo/ci/tasks/m2.sh
+  #           - init
+  #     - put: m2
+  #       params:
+  #         import_file: to-push/rootfs.tar
+  #
+  # - name: update-m2
+  #   plan:
+  #     - get: repo
+  #       resource: repo-release
+  #     - get: m2
+  #     - task: build-m2
+  #       config:
+  #         platform: linux
+  #         image_resource:
+  #           type: docker-image
+  #           source:
+  #             repository: java
+  #             tag: 8-jdk-alpine
+  #         inputs:
+  #           - name: repo
+  #           - name: m2
+  #         outputs:
+  #           - name: to-push
+  #         run:
+  #           path: sh
+  #           args:
+  #           - repo/ci/tasks/m2.sh
+  #     - put: m2
+  #       params:
+  #         import_file: to-push/rootfs.tar
+
