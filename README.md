@@ -13,3 +13,5 @@ This pipeline enables following development flow:
 * Development Space ... http://concourse-ci-demo-dev.cfapps.io/
 
 http://www.slideshare.net/makingx/concourse-ci-meetup-demo
+http://www.slideshare.net/makingx/concourse-ci-meetup-demo
+
